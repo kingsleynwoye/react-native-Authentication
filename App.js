@@ -1,11 +1,15 @@
 import {NavigationContainer} from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
  import { StatusBar } from 'expo-status-bar';
-
+import { useContext, useEffect, useState } from "react";
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
  import WelcomeScreen from './screens/WelcomeScreen';
 import { Colors } from './constants/styles';
+import AuthContextProvider, { AuthContext } from "./store/Auth-context";
+import IconButton from "./components/ui/IconButton";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AppLoading from "expo-app-loading";
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +29,7 @@ function AuthStack() {
 }
 
 function AuthenticatedStack() {
+  const authCtx = useContext(AuthContext)
   return (
     <Stack.Navigator
       screenOptions={{
@@ -33,65 +38,61 @@ function AuthenticatedStack() {
         contentStyle: { backgroundColor: Colors.primary100 },
       }}
     >
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="Welcome" 
+      component={WelcomeScreen} 
+      options={{
+         headerRight: ({tintColor}) => 
+         <IconButton icon="exit" 
+         color={tintColor} 
+         size={24} 
+         onPress={authCtx.logout}/>
+      }}/>
     </Stack.Navigator>
   );
 }
 
 function Navigation() {
+     const authCtx = useContext(AuthContext);
+
+     
+
   return (
-    <NavigationContainer>
-      <AuthStack />
-    </NavigationContainer>
+      <NavigationContainer>
+          {!authCtx.isAuthenticated && <AuthStack />}
+          {authCtx.isAuthenticated && <AuthenticatedStack />}
+       </NavigationContainer>
   );
+}
+
+function Root() {
+const [isTryingLoging, setIsTryingLoging] = useState(true)
+
+  const authCtx = useContext(AuthContext)
+  useEffect(() => {
+    async function fetchToken() {
+   const storedToken = await AsyncStorage.getItem("token");
+
+   if (storedToken) {
+      authCtx.authenticate(storedToken);  
+   }
+     setIsTryingLoging(false);
+     }
+     fetchToken();
+ }, []);
+ if (isTryingLoging) {
+  return <AppLoading />
+}
+
+ return <Navigation />;
 }
 
 export default function App() {
   return (
     <>
       <StatusBar style="light" />
-
-      <Navigation />
+       <AuthContextProvider>
+      <Root />
+      </AuthContextProvider>
     </>
   );
 }
-
-// export default function App() {
-//     return (
-//       <>
-//         <StatusBar style="light" />
-//         <WelcomeScreen />
-//       </>
-//     );
-//   }
-
-  // {
-  //   "name": "react-native-authentication",
-  //   "version": "1.0.0",
-  //   "main": "node_modules/expo/AppEntry.js",
-  //   "scripts": {
-  //     "start": "expo start",
-  //     "android": "expo start --android",
-  //     "ios": "expo start --ios",
-  //     "web": "expo start --web",
-  //     "eject": "expo eject"
-  //   },
-  //   "dependencies": {
-  //     "@react-native-community/masked-view": "^0.1.11",
-  //     "@react-navigation/native": "^6.0.10",
-  //     "@react-navigation/native-stack": "^6.6.2",
-  //     "@react-navigation/stack": "^6.2.1",
-  //     "expo": "~44.0.0",
-  //     "expo-status-bar": "~1.2.0",
-  //     "react": "17.0.1",
-  //     "react-dom": "17.0.1",
-  //     "react-native": "0.64.3",
-  //     "react-native-safe-area-context": "^4.2.5",
-  //     "react-native-web": "0.17.1"
-  //   },
-  //   "devDependencies": {
-  //     "@babel/core": "^7.12.9"
-  //   },
-  //   "private": true
-  // }
-  
