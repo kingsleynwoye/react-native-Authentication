@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RNCourse",
-    "slug": "RNCourse",
+    "name": "react-native-authentication",
+    "slug": "react-native-authentication",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
